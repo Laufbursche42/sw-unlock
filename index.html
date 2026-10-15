@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' blob:;">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title data-t="pageTitle">Segway‑Ninebot Scooter Tool</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
+<link rel="stylesheet" href="styles.css?v=12">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Laufbursche <span data-t="brandSub"></span></h1>
+    <div class="head-right">
+      <span class="status" id="status" data-state="disconnected">disconnected</span>
+      <div class="head-tools">
+        <button type="button" class="theme-btn" id="btn-theme">&#9728;</button>
+        <div class="langs" id="langs" role="group">
+          <button type="button" data-lang="de" aria-pressed="true">DE</button>
+          <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="card">
+    <h2 data-t="s1Title"></h2>
+    <p class="hint" data-t="sub"></p>
+    <p class="hint" data-t="startHintGuide"></p>
+    <p class="warn" data-t="expWarn"></p>
+    <p class="hint" data-t="ownDevice"></p>
+  </div>
+
+  <div class="card">
+    <h2 data-t="s2Title"></h2>
+    <div class="set-row">
+      <label data-t="modelLabel"></label>
+      <select id="model-sel"></select>
+    </div>
+    <div class="set-row">
+      <label data-t="genLabel"></label>
+      <select id="gen-sel">
+        <option value="gen3" data-t="genGen3"></option>
+        <option value="gen2" data-t="genGen2"></option>
+        <option value="legacy" data-t="genLegacy"></option>
+      </select>
+    </div>
+    <p class="hint" data-t="genHint"></p>
+    <div class="btns">
+      <button class="primary span2" id="btn-conn"></button>
+    </div>
+    <p class="hint" id="conn-info"></p>
+  </div>
+
+  <div class="card" id="speedlimit-card" hidden>
+    <h2 data-t="slTitle"></h2>
+    <div class="set-row">
+      <label data-t="slTarget"></label>
+      <input id="sl-kmh" type="number" step="0.1" min="1" max="120" disabled>
+      <button id="sl-on" class="primary" data-t="slOn" disabled></button>
+    </div>
+    <div class="btns">
+      <button id="sl-off" class="span2" data-t="slOff" disabled></button>
+    </div>
+    <p class="hint" id="sl-note"></p>
+    <p class="hint" data-t="slHint"></p>
+  </div>
+
+  <div class="card" id="settings-card" hidden>
+    <h2 data-t="s3Title"></h2>
+    <div class="set-row">
+      <label data-t="lblSpeed"></label>
+      <input id="speed-in" type="number" step="0.1" min="1" max="120" disabled>
+      <button id="btn-set-speed" data-t="btnSet" disabled></button>
+    </div>
+    <div class="set-row">
+      <label data-t="lblMode"></label>
+      <select id="mode-in" disabled>
+        <option value="0" data-t="modeEco"></option>
+        <option value="1" data-t="modeDrive"></option>
+        <option value="2" data-t="modeSport"></option>
+      </select>
+      <button id="btn-set-mode" data-t="btnSet" disabled></button>
+    </div>
+    <div class="set-row">
+      <label data-t="lblKERS"></label>
+      <select id="kers-in" disabled>
+        <option value="0" data-t="kersOff"></option>
+        <option value="1" data-t="kersMed"></option>
+        <option value="2" data-t="kersStrong"></option>
+      </select>
+      <button id="btn-set-kers" data-t="btnSet" disabled></button>
+    </div>
+    <div class="set-row">
+      <label data-t="lblCruise"></label>
+      <select id="cruise-in" disabled>
+        <option value="0" data-t="cruiseOff"></option>
+        <option value="1" data-t="cruiseOn"></option>
+      </select>
+      <button id="btn-set-cruise" data-t="btnSet" disabled></button>
+    </div>
+    <div class="set-row">
+      <label data-t="lblTailLight"></label>
+      <select id="taillight-in" disabled>
+        <option value="0" data-t="offLabel"></option>
+        <option value="1" data-t="onLabel"></option>
+      </select>
+      <button id="btn-set-taillight" data-t="btnSet" disabled></button>
+    </div>
+    <div class="set-row">
+      <label data-t="lblVolume"></label>
+      <input id="volume-in" type="number" step="1" min="0" max="100" disabled>
+      <button id="btn-set-volume" data-t="btnSet" disabled></button>
+    </div>
+    <p class="hint" data-t="settingsHint"></p>
+  </div>
+
+  <div class="card" id="live-card" hidden>
+    <h2 data-t="s4Title"></h2>
+    <div class="grid">
+      <div class="tile"><b id="t-speed">-</b><small data-t="tileSpeed"></small></div>
+      <div class="tile"><b id="t-battery">-</b><small data-t="tileBattery"></small></div>
+      <div class="tile"><b id="t-speedlimit">-</b><small data-t="tileSpeedLimit"></small></div>
+      <div class="tile"><b id="t-mode">-</b><small data-t="tileMode"></small></div>
+      <div class="tile"><b id="t-odo">-</b><small data-t="tileOdo"></small></div>
+      <div class="tile"><b id="t-trip">-</b><small data-t="tileTrip"></small></div>
+      <div class="tile"><b id="t-range">-</b><small data-t="tileRange"></small></div>
+      <div class="tile"><b id="t-serial">-</b><small data-t="tileSerial"></small></div>
+    </div>
+    <div class="row"><span class="fin"><span data-t="rowFwVer"></span> <span id="t-fwver">-</span></span></div>
+    <div class="row"><span class="fin"><span data-t="rowBleName"></span> <span id="t-blename">-</span></span></div>
+  </div>
+
+  <div class="card" id="bms-card" hidden>
+    <h2 data-t="bmsTitle"></h2>
+    <div class="grid">
+      <div class="tile"><b id="b-soc">-</b><small data-t="bmsSoc"></small></div>
+      <div class="tile"><b id="b-voltage">-</b><small data-t="bmsVoltage"></small></div>
+      <div class="tile"><b id="b-current">-</b><small data-t="bmsCurrent"></small></div>
+      <div class="tile"><b id="b-temp">-</b><small data-t="bmsTemp"></small></div>
+      <div class="tile"><b id="b-cycles">-</b><small data-t="bmsCycles"></small></div>
+    </div>
+    <div class="row"><span class="fin" data-t="bmsCells"></span></div>
+    <div class="cells" id="b-cells"></div>
+    <p class="hint" id="b-note"></p>
+  </div>
+
+  <div class="card" id="sn-card" hidden>
+    <h2 data-t="snTitle"></h2>
+    <p class="hint warn-note" id="sn-note"></p>
+    <p class="hint warn-note" data-t="snWarn"></p>
+    <div class="row"><span class="fin"><span data-t="snCurrent"></span> <span id="sn-current" class="mono">-</span></span></div>
+    <div class="row"><span class="fin"><span data-t="snRegion"></span> <span id="sn-region">-</span></span></div>
+    <div class="btns">
+      <button id="sn-backup" class="span2" data-t="snBackup" disabled></button>
+    </div>
+    <p class="hint" id="sn-backup-info"></p>
+    <hr class="sep">
+    <label class="check-row"><input type="checkbox" id="sn-ack"> <span data-t="snAck"></span></label>
+    <div class="set-row">
+      <label data-t="snNew"></label>
+      <input id="sn-new" type="text" maxlength="16" placeholder="N4GSW..." disabled>
+      <button id="sn-write" class="danger" data-t="snWrite" disabled></button>
+    </div>
+    <div class="btns">
+      <button id="sn-restore" class="span2" data-t="snRestore" disabled></button>
+    </div>
+    <p class="hint" data-t="snHint"></p>
+  </div>
+
+  <div class="card" id="raw-card" hidden>
+    <div class="card-head"><h2 data-t="rawTitle"></h2><button type="button" class="help-btn" data-help="raw" aria-label="Info">?</button></div>
+    <p class="hint warn-note" data-t="rawWarn"></p>
+    <div class="raw-grid">
+      <div class="rf full"><label data-t="rawPreset"></label>
+        <select id="raw-preset"></select></div>
+      <div class="rf full"><label data-t="rawBoard"></label>
+        <select id="raw-board"></select></div>
+      <div class="rf"><label data-t="rawReg"></label>
+        <input id="raw-reg" type="text" placeholder="0x72"></div>
+      <div class="rf"><label data-t="rawLen"></label>
+        <input id="raw-len" type="number" min="1" max="60" value="2"></div>
+      <div class="rf full"><label data-t="rawValue"></label>
+        <input id="raw-val" type="text" placeholder="2c 01"></div>
+    </div>
+    <div class="btns">
+      <button id="raw-read" data-t="rawRead" disabled></button>
+      <button id="raw-write" data-t="rawWrite" disabled></button>
+    </div>
+    <div class="raw-out" id="raw-out"></div>
+    <p class="hint" data-t="rawHint"></p>
+  </div>
+
+  <div class="card">
+    <h2 data-t="s6Title"></h2>
+    <div class="log-opts">
+      <div class="log-opt">
+        <span data-t="publicLogLabel"></span>
+        <input type="checkbox" id="public-log" checked>
+        <button type="button" class="help-btn" data-help="publiclog" aria-label="Info">?</button>
+      </div>
+      <div class="log-opt">
+        <span data-t="diagLogLabel"></span>
+        <input type="checkbox" id="diag-log">
+        <button type="button" class="help-btn" data-help="diaglog" aria-label="Info">?</button>
+      </div>
+    </div>
+    <div class="btns">
+      <button type="button" id="btn-copy-log" data-t="btnCopyLog"></button>
+      <button type="button" id="btn-clear-log" data-t="btnClearLog"></button>
+      <button type="button" id="btn-save-log" class="span2" data-t="btnSaveLog"></button>
+    </div>
+    <pre id="log"></pre>
+    <p class="hint"><span class="log-tx" data-t="logTxLegend"></span>, <span class="log-rx" data-t="logRxLegend"></span></p>
+  </div>
+
+  <footer class="foot">
+    <span class="foot-links">
+      <a id="link-guide" href="GUIDE.de.md" data-doc="GUIDE" data-t="footGuide"></a>
+      <a href="https://github.com/Laufbursche42/sw-unlock" target="_blank" rel="noopener" data-t="footSource"></a>
+      <a id="link-readme" href="README.md" data-doc="README" data-t="footReadme"></a>
+      <a id="link-disclaimer" href="DISCLAIMER.de.md" data-doc="DISCLAIMER" data-t="footDisclaimer"></a>
+      <a id="link-license" href="LICENSE.de.md" data-doc="LICENSE" data-t="footLicense"></a>
+      <a id="link-privacy" href="PRIVACY.de.md" data-doc="PRIVACY" data-t="footPrivacy"></a>
+      <a id="link-trademarks" href="TRADEMARKS.de.md" data-doc="TRADEMARKS" data-t="footTrademarks"></a>
+    </span>
+    <span class="foot-links"><span class="ver" id="build-ver"></span><a href="https://github.com/Laufbursche42/Laufbursche42/issues" target="_blank" rel="noopener" data-t="footIssue"></a></span>
+    <a class="foot-copy" href="https://laufbursche42.github.io/sw-unlock/" target="_blank" rel="noopener">Copyright (c) 2026 Laufbursche</a>
+  </footer>
+</div>
+
+<dialog id="doc" aria-labelledby="doc-title">
+  <div class="doc-head">
+    <h3 id="doc-title"></h3>
+    <button type="button" id="doc-x">&times;</button>
+  </div>
+  <div class="doc-body" id="doc-body"></div>
+  <div class="doc-foot">
+    <button type="button" id="doc-close" data-t="docClose"></button>
+  </div>
+</dialog>
+
+<dialog id="help" aria-labelledby="help-title">
+  <div class="doc-head">
+    <h3 id="help-title"></h3>
+    <button type="button" id="help-x">&times;</button>
+  </div>
+  <div class="doc-body"><div id="help-body"></div><p id="help-warn" class="help-warn" hidden></p></div>
+  <div class="doc-foot">
+    <button type="button" id="help-close" data-t="docClose"></button>
+  </div>
+</dialog>
+
+<dialog id="confirm" aria-labelledby="confirm-title">
+  <div class="doc-head">
+    <h3 id="confirm-title" data-t="riskyTitle"></h3>
+    <button type="button" id="confirm-cancel-x">&times;</button>
+  </div>
+  <div class="doc-body"><p id="confirm-body"></p></div>
+  <div class="doc-foot doc-foot-2">
+    <button type="button" id="confirm-cancel" data-t="riskyCancel"></button>
+    <button type="button" id="confirm-ok" class="primary" data-t="riskyOk"></button>
+  </div>
+</dialog>
+
+<script src="report-footer.js?v=12"></script>
+<script src="i18n.js?v=12"></script>
+<script src="app.js?v=12"></script>
+</body>
+</html>
