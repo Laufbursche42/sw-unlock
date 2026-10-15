@@ -822,7 +822,7 @@ function mdToHtml(md){
 }
 
 // ---- UI ----
-function t(key){ const T=(typeof window!=='undefined')&&window.I18N; if(!T||typeof lang==='undefined') return key; return (T[lang]&&T[lang][key])||key; }
+function t(key){ const T=(typeof window!=='undefined')&&window.I18N; const v=T&&T[lang]&&T[lang][key]; return (typeof v==='string')?v:''; } // returns the table value or '' (never the key/DOM text) - keeps getAttribute('data-t') out of innerHTML (CodeQL js/xss-through-dom)
 function switchLang(l){ lang=l; try{ localStorage.setItem('segway_lang',l); }catch(e){}
   document.querySelectorAll('#langs button').forEach(b=>b.setAttribute('aria-pressed',String(b.getAttribute('data-lang')===l)));
   document.querySelectorAll('[data-t]').forEach(el=>{ const k=el.getAttribute('data-t'); const s=t(k); if(el.tagName==='INPUT'&&el.type==='button') el.value=s; else if(/[<&]/.test(s)) el.innerHTML=s; else el.textContent=s; }); // scan-ok: own translation table
