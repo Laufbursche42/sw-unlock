@@ -15,7 +15,7 @@
 // and unverified on a real vehicle. The model picker selects the right board+register; verify values by reading first.
 'use strict';
 
-const BUILD = 'v4';
+const BUILD = 'v5';
 
 // ---- BLE service UUIDs ----
 const NINEBOT_SVC='6e400001-0000-0000-006e-696e65626f74', NINEBOT_WR='6e400002-0000-0000-006e-696e65626f74', NINEBOT_NTFY='6e400004-0000-0000-006e-696e65626f74';
@@ -172,7 +172,7 @@ let currentModel=MODELS[0];
 // ---- State ----
 let device=null,server=null,svc=null,writeChar=null,notifyChar=null;
 let connected=false,authDone=false,encrypted=true;
-let authParam=null,serial=null,sessionKey=null,password=null;
+let authParam=null,serial=null,sessionKey=null,pwBytes=null;
 let counter=0,bleName='',pollTimer=null,readMap=new Map();
 let rawWatch=new Set();
 const INFO={}, BMS=[{},{},{}];
@@ -268,7 +268,7 @@ const KICK_PRESETS=[
   {label:'⤓ BMS Ladestand (0x22 0x32 %)',               board:0x22,reg:0x32,len:2},
   {label:'⤓ BMS Strom (0x22 0x33 s16 ×0.01A)',          board:0x22,reg:0x33,len:2},
   {label:'⤓ BMS Spannung (0x22 0x34 ×0.01V)',           board:0x22,reg:0x34,len:2},
-  {label:'⤓ BMS Temperaturen (0x22 0x35, je −20°C)',    board:0x22,reg:0x35,len:2},
+  {label:'⤓ BMS Temperaturen (0x22 0x35, je -20°C)',    board:0x22,reg:0x35,len:2},
   {label:'⤓ BMS Gesundheit SoH (0x22 0x3B %)',          board:0x22,reg:0x3B,len:2},
   {label:'⤓ BMS Zellspannungen (0x22 0x40, 20B)',       board:0x22,reg:0x40,len:20},
   // writes - speed levers
@@ -459,8 +459,8 @@ function renderSn(){ set('sn-current',INFO.serial);
 async function authPhase1(){ await setSessionKey(await deriveKey(new TextEncoder().encode(bleName),new Uint8Array(16)));
   log('PRE_COMM → BLE'); await writeChar.writeValue(await encryptNonSN(sessionKey,new Uint8Array([0x3E,AUTH_TARGET,CMD.PRE_COMM,0x00]))); }
 async function authPhase2(){ await setSessionKey(await deriveKey(new TextEncoder().encode(bleName),authParam)); counter=1; counter++;
-  log('SET_PWD → BLE'); await writeChar.writeValue(await encryptSN(sessionKey,counter,authParam,concat(new Uint8Array([0x3E,AUTH_TARGET,CMD.SET_PWD,0x00]),password))); }
-async function authPhase3(){ await setSessionKey(await deriveKey(password,authParam)); counter++;
+  log('SET_PWD → BLE'); await writeChar.writeValue(await encryptSN(sessionKey,counter,authParam,concat(new Uint8Array([0x3E,AUTH_TARGET,CMD.SET_PWD,0x00]),pwBytes))); }
+async function authPhase3(){ await setSessionKey(await deriveKey(pwBytes,authParam)); counter++;
   log('AUTH → BLE'); await writeChar.writeValue(await encryptSN(sessionKey,counter,authParam,concat(new Uint8Array([0x3E,AUTH_TARGET,CMD.AUTH,0x00]),serial))); }
 async function doAuth(){ if(!encrypted){ authDone=true; afterAuth(); return; } log('Auth-Handshake…'); await authPhase1(); }
 function afterAuth(){ setStatus('connected'); buildReadMap(); setTimeout(()=>{ readAll(); startPolling(); },400); }
@@ -469,7 +469,7 @@ async function handleResponse(p){
   switch(p.cmd){
     case CMD.PRE_COMM: if(p.data.length>=30){ authParam=p.data.slice(0,16); serial=p.data.slice(16,30);
         INFO.serial=new TextDecoder().decode(serial).replace(/\0/g,''); render();
-        const rnd=new Uint8Array(16); crypto.getRandomValues(rnd); password=rnd; await authPhase2(); } break;
+        const rnd=new Uint8Array(16); crypto.getRandomValues(rnd); pwBytes=rnd; await authPhase2(); } break;
     case CMD.SET_PWD: if(p.reg===1||p.data[0]===1){ log('Passwort akzeptiert'); await authPhase3(); } else { log('Einschalttaste am Roller drücken…'); setTimeout(()=>authPhase3().catch(e=>log('Auth '+e.message)),2000); } break;
     case CMD.AUTH: if(p.reg===1||p.data[0]===1){ authDone=true; log('Auth OK'); afterAuth(); } else log('Auth fehlgeschlagen'); break;
     case CMD.READ_RESP: decodeRead(p.src,p.reg,p.data); break;
@@ -573,6 +573,7 @@ function setStatus(state){
   connected=(state==='connected');
   revealCards(connected);
   const btn=document.getElementById('btn-conn'); if(btn){ btn.textContent=connected?t('btnDisconnect'):t('btnConnect'); btn.disabled=false; }
+  const all=document.getElementById('conn-all-row'); if(all) all.hidden=connected;
   refreshControls();
 }
 function refreshControls(){
@@ -614,10 +615,12 @@ async function detectService(server){
   for(const uuid of VENDOR_16BIT){ try{ svc=await server.getPrimaryService(uuid); return 'vendor16'; }catch(e){} }
   throw new Error('Kein bekannter BLE-Service gefunden');
 }
-async function connect(){
+async function connect(all){
   try{
     log('Suche…'); setStatus('scanning');
-    device=await navigator.bluetooth.requestDevice({ filters:NAME_PREFIXES.map(p=>({namePrefix:p})), optionalServices:OPTIONAL_SERVICES });
+    const opts=all?{ acceptAllDevices:true, optionalServices:OPTIONAL_SERVICES }
+                  :{ filters:NAME_PREFIXES.map(p=>({namePrefix:p})), optionalServices:OPTIONAL_SERVICES };
+    device=await navigator.bluetooth.requestDevice(opts);
     bleName=device.name||''; deviceName=bleName; deviceId=device.id||''; const bn=document.getElementById('t-blename'); if(bn) bn.textContent=bleName; log('Gefunden: '+bleName);
     device.addEventListener('gattserverdisconnected',onDisconnect);
     server=await device.gatt.connect();
@@ -626,10 +629,10 @@ async function connect(){
     notifyChar=await svc.getCharacteristic(NOTIFY_UUIDS[svcType]);
     await notifyChar.startNotifications(); notifyChar.addEventListener('characteristicvaluechanged',onNotify);
     setStatus('connected'); counter=0; authDone=false; await doAuth();
-  }catch(e){ log('Fehler: '+e.message); setStatus('disconnected'); }
+  }catch(e){ log('Fehler: '+e.message); if(!all&&e&&e.name==='NotFoundError') log(t('connHintAll')||''); setStatus('disconnected'); }
 }
 async function disconnect(){ stopPolling(); try{ if(server) await server.disconnect(); }catch(e){}
-  device=server=svc=writeChar=notifyChar=null; authDone=false; authParam=serial=sessionKey=password=null; counter=0; setStatus('disconnected'); log('Getrennt'); }
+  device=server=svc=writeChar=notifyChar=null; authDone=false; authParam=serial=sessionKey=pwBytes=null; counter=0; setStatus('disconnected'); log('Getrennt'); }
 function onDisconnect(){ stopPolling(); setStatus('disconnected'); log('Verbindung getrennt'); }
 
 let rxBuf=new Uint8Array(0);
@@ -832,6 +835,7 @@ function switchLang(l){ lang=l; try{ localStorage.setItem('segway_lang',l); }cat
 function initUI(){
   const on=(id,ev,fn)=>{ const e=document.getElementById(id); if(e) e.addEventListener(ev,fn); };
   on('btn-conn','click',()=>connected?disconnect():connect());
+  on('btn-conn-all','click',e=>{ e.preventDefault(); if(!connected) connect(true); });
   on('btn-set-speed','click',()=>{ const v=parseFloat(document.getElementById('speed-in').value); if(v>0) setSpeed(v); });
   on('btn-set-mode','click',()=>setMode(parseInt(document.getElementById('mode-in').value)));
   on('btn-set-kers','click',()=>setKERS(parseInt(document.getElementById('kers-in').value)));
