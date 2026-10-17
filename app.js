@@ -15,7 +15,7 @@
 // and unverified on a real vehicle. The model picker selects the right board+register; verify values by reading first.
 'use strict';
 
-const BUILD = 'v6';
+const BUILD = 'v7';
 
 // ---- BLE service UUIDs ----
 const NINEBOT_SVC='6e400001-0000-0000-006e-696e65626f74', NINEBOT_WR='6e400002-0000-0000-006e-696e65626f74', NINEBOT_NTFY='6e400004-0000-0000-006e-696e65626f74';
@@ -26,7 +26,9 @@ const FEE7_SVC='0000fee7-0000-1000-8000-00805f9b34fb', FEC7_WR='0000fec7-0000-10
 const VENDOR_16BIT=[];
 for(const base of ['fc','fd','fe','ff']) for(let i=0;i<256;i++) VENDOR_16BIT.push('0000'+base+i.toString(16).padStart(2,'0')+'-0000-1000-8000-00805f9b34fb');
 const OPTIONAL_SERVICES=[NINEBOT_SVC,NORDIC_SVC,ISSC_SVC,HMSOFT_SVC,FEE7_SVC,...VENDOR_16BIT];
-const NAME_PREFIXES=['NB','Ninebot','ninebot','S1D','SNSC','N2','N3','N4','N5','N6','N7','N8','N9','ES','Max','F20','F25','F30','F40','GT','P100','P65','D18','D28','D38','E2','E25','E45','Segway'];
+// Modern VCU models (GT3/Max G3 ...) advertise their serial as the BLE name (e.g. 03GGG...),
+// so serial-style prefixes are included alongside the classic NB/Ninebot/GT names.
+const NAME_PREFIXES=['NB','Ninebot','ninebot','S1D','SNSC','N2','N3','N4','N5','N6','N7','N8','N9','ES','Max','F20','F25','F30','F40','GT','P100','P65','D18','D28','D38','E2','E25','E45','Segway','03G','04G'];
 const WRITE_UUIDS={ninebot:NINEBOT_WR,nordic:NORDIC_WR,issc:ISSC_WR,hmsoft:HMSOFT_SVC,fee7:FEC7_WR};
 const NOTIFY_UUIDS={ninebot:NINEBOT_NTFY,nordic:NORDIC_NTFY,issc:ISSC_NTFY,hmsoft:HMSOFT_NTFY,fee7:FEC8_NTFY};
 
@@ -174,6 +176,7 @@ let device=null,server=null,svc=null,writeChar=null,notifyChar=null;
 let connected=false,authDone=false,encrypted=true;
 let authParam=null,serial=null,sessionKey=null,pwBytes=null;
 let counter=0,bleName='',pollTimer=null,readMap=new Map();
+let authSeen=false,authTimer=null;   // authSeen: any notification arrived; authTimer: handshake watchdog
 let rawWatch=new Set();
 const INFO={}, BMS=[{},{},{}];
 
@@ -310,6 +313,10 @@ function concat(...a){ const t=a.reduce((s,x)=>s+x.length,0),r=new Uint8Array(t)
 function xor16(a,b){ const r=new Uint8Array(16); for(let i=0;i<16;i++) r[i]=(a[i]||0)^(b[i]||0); return r; }
 function pad16(d){ const r=new Uint8Array(16); r.set(d.slice(0,16)); return r; }
 function hex(b){ return Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join(''); }
+// Space-separated hex: stays readable through the anonymizer (it masks only long contiguous runs).
+function hsp(b){ return Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join(' '); }
+// All BLE writes go through here so diag mode can record the exact bytes on the wire.
+async function txv(bytes){ if(diagLog) log('TX '+hsp(bytes),'log-tx'); return writeChar.writeValue(bytes); }
 function u16le(d,o=0){ return d[o]|(d[o+1]<<8); }
 function i16le(d,o=0){ const v=u16le(d,o); return v>=0x8000?v-0x10000:v; }
 function u32le(d,o=0){ return (d[o]|(d[o+1]<<8)|(d[o+2]<<16)|(d[o+3]<<24))>>>0; }
@@ -368,17 +375,17 @@ function parseP2(f){ if(f.length<9||f[0]!==0x5A) return null; const len=f[2]; re
 
 // ---- send ----
 async function sendRead(target,reg,nbytes){
-  if(encrypted){ counter++; await writeChar.writeValue(await encryptSN(sessionKey,counter,authParam,new Uint8Array([0x3E,target,CMD.READ,reg,nbytes]))); }
-  else await writeChar.writeValue(buildP2(target,CMD.READ,reg,new Uint8Array([nbytes])));
+  if(encrypted){ counter++; await txv(await encryptSN(sessionKey,counter,authParam,new Uint8Array([0x3E,target,CMD.READ,reg,nbytes]))); }
+  else await txv(buildP2(target,CMD.READ,reg,new Uint8Array([nbytes])));
 }
 async function sendWrite(target,reg,data){
-  if(encrypted){ counter++; await writeChar.writeValue(await encryptSN(sessionKey,counter,authParam,concat(new Uint8Array([0x3E,target,CMD.WRITE,reg]),data))); }
-  else await writeChar.writeValue(buildP2(target,CMD.WRITE,reg,data));
+  if(encrypted){ counter++; await txv(await encryptSN(sessionKey,counter,authParam,concat(new Uint8Array([0x3E,target,CMD.WRITE,reg]),data))); }
+  else await txv(buildP2(target,CMD.WRITE,reg,data));
 }
 async function sendCommand(target,cmd,index,payload){ // 0x63 unlock braucht 16-Byte-Ident; 0x57 activate = cloud/konto-gebunden, Payload nirgends öffentlich (auch nicht in der App-Binary) - nicht nachbaubar
   const inner=concat(new Uint8Array([0x3E,target,cmd,index]),payload||new Uint8Array(0));
-  if(encrypted){ counter++; await writeChar.writeValue(await encryptSN(sessionKey,counter,authParam,inner)); }
-  else await writeChar.writeValue(buildP2(target,cmd,index,payload||new Uint8Array(0)));
+  if(encrypted){ counter++; await txv(await encryptSN(sessionKey,counter,authParam,inner)); }
+  else await txv(buildP2(target,cmd,index,payload||new Uint8Array(0)));
 }
 
 // ---- settings ----
@@ -451,14 +458,18 @@ function renderSn(){ set('sn-current',INFO.serial);
 }
 
 // ---- auth ---- PRE_COMM non-SN(0) → start_sn(1) → SET_PWD(2) → AUTH(3) [OK]
+function armAuth(){ clearTimeout(authTimer); authTimer=setTimeout(authWatchdog,6000); }
 async function authPhase1(){ await setSessionKey(await deriveKey(new TextEncoder().encode(bleName),new Uint8Array(16)));
-  log('PRE_COMM → BLE'); await writeChar.writeValue(await encryptNonSN(sessionKey,new Uint8Array([0x3E,AUTH_TARGET,CMD.PRE_COMM,0x00]))); }
+  log('PRE_COMM → BLE'); armAuth(); await txv(await encryptNonSN(sessionKey,new Uint8Array([0x3E,AUTH_TARGET,CMD.PRE_COMM,0x00]))); }
 async function authPhase2(){ await setSessionKey(await deriveKey(new TextEncoder().encode(bleName),authParam)); counter=1; counter++;
-  log('SET_PWD → BLE'); await writeChar.writeValue(await encryptSN(sessionKey,counter,authParam,concat(new Uint8Array([0x3E,AUTH_TARGET,CMD.SET_PWD,0x00]),pwBytes))); }
+  log('SET_PWD → BLE'); armAuth(); await txv(await encryptSN(sessionKey,counter,authParam,concat(new Uint8Array([0x3E,AUTH_TARGET,CMD.SET_PWD,0x00]),pwBytes))); }
 async function authPhase3(){ await setSessionKey(await deriveKey(pwBytes,authParam)); counter++;
-  log('AUTH → BLE'); await writeChar.writeValue(await encryptSN(sessionKey,counter,authParam,concat(new Uint8Array([0x3E,AUTH_TARGET,CMD.AUTH,0x00]),serial))); }
-async function doAuth(){ if(!encrypted){ authDone=true; afterAuth(); return; } log('Auth-Handshake…'); await authPhase1(); }
-function afterAuth(){ setStatus('connected'); buildReadMap(); setTimeout(()=>{ readAll(); startPolling(); },400); }
+  log('AUTH → BLE'); armAuth(); await txv(await encryptSN(sessionKey,counter,authParam,concat(new Uint8Array([0x3E,AUTH_TARGET,CMD.AUTH,0x00]),serial))); }
+async function doAuth(){ if(!encrypted){ authDone=true; afterAuth(); return; } log('Auth-Handshake…'); authSeen=false; await authPhase1(); }
+// If the handshake never completes, say why: silent scooter (account lock / app still connected /
+// asleep) vs. answered-but-stuck (crypto/protocol mismatch for this model).
+function authWatchdog(){ if(authDone) return; log(authSeen?(t('authStalled')||'handshake stalled'):(t('authNoResp')||'no response'),'log-err'); }
+function afterAuth(){ clearTimeout(authTimer); setStatus('connected'); buildReadMap(); setTimeout(()=>{ readAll(); startPolling(); },400); }
 
 async function handleResponse(p){
   switch(p.cmd){
@@ -640,19 +651,29 @@ async function connect(all){
     setStatus('connected'); counter=0; authDone=false; await doAuth();
   }catch(e){ log('Fehler: '+e.message); if(!all&&e&&e.name==='NotFoundError') log(t('connHintAll')||''); setStatus('disconnected'); }
 }
-async function disconnect(){ stopPolling(); try{ if(server) await server.disconnect(); }catch(e){}
+async function disconnect(){ stopPolling(); clearTimeout(authTimer); try{ if(server) await server.disconnect(); }catch(e){}
   device=server=svc=writeChar=notifyChar=null; authDone=false; authParam=serial=sessionKey=pwBytes=null; counter=0; setStatus('disconnected'); log('Getrennt'); }
-function onDisconnect(){ stopPolling(); setStatus('disconnected'); log('Verbindung getrennt'); }
+function onDisconnect(){ stopPolling(); clearTimeout(authTimer); setStatus('disconnected'); log('Verbindung getrennt'); }
 
 let rxBuf=new Uint8Array(0);
 async function onNotify(event){
-  rxBuf=concat(rxBuf,new Uint8Array(event.target.value.buffer));
+  const chunk=new Uint8Array(event.target.value.buffer);
+  if(diagLog) log('RX '+hsp(chunk),'log-rx');
+  authSeen=true;
+  rxBuf=concat(rxBuf,chunk);
   while(rxBuf.length>=3){
     if(rxBuf[0]!==0x5A||(rxBuf[1]!==0xA5&&rxBuf[1]!==0xB5)){ rxBuf=rxBuf.slice(1); continue; }
     const total=encrypted?(rxBuf[2]+13):(rxBuf[2]+9);
     if(rxBuf.length<total) break;
     const frame=rxBuf.slice(0,total); rxBuf=rxBuf.slice(total);
-    try{ let p; if(encrypted){ const inner=await decryptFrame(sessionKey,frame,authParam); if(inner&&inner.length>=4) p={src:inner[0],dst:inner[1],cmd:inner[2],reg:inner[3],data:inner.slice(4)}; } else p=parseP2(frame); if(p) await handleResponse(p); }catch(e){}
+    try{
+      let p;
+      if(encrypted){ const inner=await decryptFrame(sessionKey,frame,authParam);
+        if(inner&&inner.length>=4){ p={src:inner[0],dst:inner[1],cmd:inner[2],reg:inner[3],data:inner.slice(4)}; if(diagLog) log('  dec '+hsp(inner),'log-rx'); }
+        else if(diagLog) log('  entschlüsselt, aber kein gültiges Frame','log-err'); }
+      else p=parseP2(frame);
+      if(p) await handleResponse(p);
+    }catch(e){ if(diagLog) log('  RX-Fehler: '+e.message,'log-err'); }
   }
 }
 
