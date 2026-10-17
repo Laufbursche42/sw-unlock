@@ -15,7 +15,7 @@
 // and unverified on a real vehicle. The model picker selects the right board+register; verify values by reading first.
 'use strict';
 
-const BUILD = 'v5';
+const BUILD = 'v6';
 
 // ---- BLE service UUIDs ----
 const NINEBOT_SVC='6e400001-0000-0000-006e-696e65626f74', NINEBOT_WR='6e400002-0000-0000-006e-696e65626f74', NINEBOT_NTFY='6e400004-0000-0000-006e-696e65626f74';
@@ -415,12 +415,7 @@ async function setSpeedLimitOff(){
 }
 
 // ---- serial-number backup / restore / region (writes cmd 0x18) ----
-function downloadJSON(name,obj){
-  try{ const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob);
-    const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click();
-    setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },1000);
-  }catch(e){ log('Download: '+e.message); }
-}
+function downloadJSON(name,obj){ saveFile(name,JSON.stringify(obj,null,2),'application/json'); }
 function currentSnapshot(){ return { tool:'sw-unlock', build:BUILD, ts:new Date().toISOString(), bleName,
   model:currentModel&&currentModel.name, profile:currentModel&&currentModel.p, gen:(encrypted?(proto.sync2===0xA5?'gen2':'gen3'):'legacy'),
   serial:INFO.serial||null, fwVer:INFO.fwVer||null, telemetry:{...INFO} }; }
@@ -556,10 +551,24 @@ function copyLogFallback(text){
   const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
   try{ document.execCommand('copy'); log(t('logCopied')||'copied','log-ok'); }catch(e){ log('copy failed: '+e,'log-err'); } document.body.removeChild(ta);
 }
+// iOS has no visible "save" for a blob download (Safari/Bluefy ignore the download attr and
+// just show the text). Use the native share sheet when present so the user picks the target
+// ("Save to Files") and sees where it lands; fall back to a plain download elsewhere.
+function saveFile(filename,text,mime,okMsg){
+  const done=()=>{ if(okMsg) log(okMsg,'log-ok'); };
+  const dl=()=>{ try{ const blob=new Blob([text],{type:mime}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(url); a.remove(); },1000); done(); }catch(e){ log('save failed: '+e.message,'log-err'); } };
+  try{
+    const file=new File([text],filename,{type:mime});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:filename}).then(done).catch(e=>{ if(!e||e.name!=='AbortError') dl(); });
+      return;
+    }
+  }catch(e){}
+  dl();
+}
 function saveLog(){
   const text=logBuffer.map(e=>anonymize(e.raw)).join('\n');
-  try{ const blob=new Blob([text],{type:'text/plain'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='segway-log.txt'; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(()=>URL.revokeObjectURL(url),1000); log(t('logSaved')||'saved','log-ok'); }
-  catch(e){ log('save failed: '+e,'log-err'); }
+  saveFile('segway-log.txt',text,'text/plain',t('logSaved')||'saved');
 }
 // Canonical hidden-until-connect: content cards appear on connect, hide on disconnect/load.
 function revealCards(on){
