@@ -15,7 +15,7 @@
 // and unverified on a real vehicle. The model picker selects the right board+register; verify values by reading first.
 'use strict';
 
-const BUILD = 'v7';
+const BUILD = 'v8';
 
 // ---- BLE service UUIDs ----
 const NINEBOT_SVC='6e400001-0000-0000-006e-696e65626f74', NINEBOT_WR='6e400002-0000-0000-006e-696e65626f74', NINEBOT_NTFY='6e400004-0000-0000-006e-696e65626f74';
@@ -618,6 +618,9 @@ function applyModel(idx){
   const m=MODELS[idx]; if(!m) return; currentModel=m; scheme=PROFILES[m.p]||PROFILES.eseries;
   const g=scheme.gen||'gen3'; encrypted=(g!=='legacy'); proto=(g==='gen2')?GEN.gen2:GEN.gen3;
   const gs=document.getElementById('gen-sel'); if(gs) gs.value=g;
+  // Hand the raw console over to this model's primary board (GT3 -> VCU 0x16, E-series -> DIS 0x01,
+  // kick -> ESC 0x20 ...) instead of leaving it on the default E-series dashboard board.
+  const rb=document.getElementById('raw-board'); if(rb && scheme.serialBoard!=null && rb.querySelector('option[value="'+scheme.serialBoard+'"]')) rb.value=String(scheme.serialBoard);
   try{ localStorage.setItem('segway_model',String(idx)); }catch(e){}
   buildReadMap(); refreshControls(); render();
   log((t('modelSet')||'Modell:')+' '+m.name);
