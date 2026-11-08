@@ -8,13 +8,13 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="favicon-180.png">
-<link rel="stylesheet" href="styles.css?v=10">
+<link rel="stylesheet" href="styles.css?v=11">
 <!-- Cloudflare Web Analytics --><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "1f2a3915448b4b68b4380423f2be4b09"}'></script><!-- scan-ok: Cloudflare Web Analytics beacon (token starts 1f2a39 ends 4b09); cookieless aggregate page metrics, see PRIVACY -->
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Laufbursche <span data-t="brandSub"></span></h1>
+    <h1>Laufbursche <span data-t="brandSub">SEGWAY-NINEBOT unlock</span></h1>
     <div class="head-right">
       <span class="status" id="status" data-state="disconnected">disconnected</span>
       <div class="head-tools">
@@ -28,208 +28,208 @@
   </header>
 
   <div class="card">
-    <h2 data-t="s1Title"></h2>
-    <p class="hint" data-t="sub"></p>
-    <p class="hint" data-t="startHintGuide"></p>
-    <p class="warn" data-t="expWarn"></p>
-    <p class="hint" data-t="ownDevice"></p>
+    <h2 data-t="s1Title">Segway-Ninebot Scooter</h2>
+    <p class="hint" data-t="sub">Telemetrie lesen und Geschwindigkeit, Fahrmodus, KERS & Tempomat per Web Bluetooth einstellen.</p>
+    <p class="hint" data-t="startHintGuide">Neu hier? In der <a href="GUIDE.de.md" data-doc="GUIDE" data-t="footGuide">Anleitung</a> steht jeder Schritt.</p>
+    <p class="warn" data-t="expWarn">Machbarkeitsstudie: Diese Seite zeigt, was das Bluetooth-Protokoll eines Segway-Ninebot-Scooters technisch möglich macht. Sie ist kein fertiges Produkt. Es gibt keine Gewährleistung. Alles was du hier tust, tust du auf eigenes Risiko. <a href="#" data-open-disclaimer>Haftungsausschluss lesen</a>.</p>
+    <p class="hint" data-t="ownDevice">Nur am eigenen Fahrzeug auf privatem Gelände. Das Anheben der Höchstgeschwindigkeit hebt die Drossel auf, die ABE erlischt und der Betrieb auf öffentlichen Wegen ist dann nicht erlaubt.</p>
   </div>
 
   <div class="card">
-    <h2 data-t="s2Title"></h2>
+    <h2 data-t="s2Title">Verbinden</h2>
     <div class="set-row">
-      <label data-t="modelLabel"></label>
+      <label data-t="modelLabel">Modell</label>
       <select id="model-sel"></select>
     </div>
     <div class="set-row">
-      <label data-t="genLabel"></label>
+      <label data-t="genLabel">Krypto-Protokoll</label>
       <select id="gen-sel">
-        <option value="gen3" data-t="genGen3"></option>
-        <option value="gen2" data-t="genGen2"></option>
-        <option value="legacy" data-t="genLegacy"></option>
+        <option value="gen3" data-t="genGen3">Encryption2 · GEN3 (aktuell)</option>
+        <option value="gen2" data-t="genGen2">Encryption2 · GEN2 (älter)</option>
+        <option value="legacy" data-t="genLegacy">Legacy (unverschlüsselt)</option>
       </select>
     </div>
-    <p class="hint" data-t="genHint"></p>
+    <p class="hint" data-t="genHint">Wird vom Modell automatisch gesetzt. Nur ändern, wenn die Verbindung scheitert.</p>
     <div class="btns">
       <button class="primary span2" id="btn-conn"></button>
     </div>
     <p class="hint" id="conn-info"></p>
-    <p class="hint" id="conn-all-row"><a href="#" id="btn-conn-all" data-t="btnConnectAll"></a></p>
+    <p class="hint" id="conn-all-row"><a href="#" id="btn-conn-all" data-t="btnConnectAll">Scooter nicht in der Liste? Alle Bluetooth-Geräte zeigen</a></p>
   </div>
 
   <div class="card" id="speedlimit-card" hidden>
-    <h2 data-t="slTitle"></h2>
+    <h2 data-t="slTitle">Speed-Limit-Schalter</h2>
     <div class="set-row">
-      <label data-t="slTarget"></label>
+      <label data-t="slTarget">Drosseln auf</label>
       <input id="sl-kmh" type="number" step="0.1" min="1" max="120" disabled>
-      <button id="sl-on" class="primary" data-t="slOn" disabled></button>
+      <button id="sl-on" class="primary" data-t="slOn" disabled>Drosseln</button>
     </div>
     <div class="btns">
-      <button id="sl-off" class="span2" data-t="slOff" disabled></button>
+      <button id="sl-off" class="span2" data-t="slOff" disabled>Limit aus (offen)</button>
     </div>
     <p class="hint" id="sl-note"></p>
-    <p class="hint" data-t="slHint"></p>
+    <p class="hint" data-t="slHint">Token-frei & reversibel. „Drosseln" schreibt dein Limit auf das modellspezifische Register (wird automatisch gewählt). „Limit aus" entfernt die Drossel, wo ein AUS-Register dokumentiert ist (sonst hohen Wert setzen).</p>
   </div>
 
   <div class="card" id="settings-card" hidden>
-    <h2 data-t="s3Title"></h2>
+    <h2 data-t="s3Title">Einstellungen</h2>
     <div class="set-row">
-      <label data-t="lblSpeed"></label>
+      <label data-t="lblSpeed">Höchstgeschwindigkeit</label>
       <input id="speed-in" type="number" step="0.1" min="1" max="120" disabled>
-      <button id="btn-set-speed" data-t="btnSet" disabled></button>
+      <button id="btn-set-speed" data-t="btnSet" disabled>Setzen</button>
     </div>
     <div class="set-row">
-      <label data-t="lblMode"></label>
+      <label data-t="lblMode">Fahrmodus</label>
       <select id="mode-in" disabled>
-        <option value="0" data-t="modeEco"></option>
-        <option value="1" data-t="modeDrive"></option>
-        <option value="2" data-t="modeSport"></option>
+        <option value="0" data-t="modeEco">Eco</option>
+        <option value="1" data-t="modeDrive">Drive</option>
+        <option value="2" data-t="modeSport">Sport</option>
       </select>
-      <button id="btn-set-mode" data-t="btnSet" disabled></button>
+      <button id="btn-set-mode" data-t="btnSet" disabled>Setzen</button>
     </div>
     <div class="set-row">
-      <label data-t="lblKERS"></label>
+      <label data-t="lblKERS">KERS (Rekuperation)</label>
       <select id="kers-in" disabled>
-        <option value="0" data-t="kersOff"></option>
-        <option value="1" data-t="kersMed"></option>
-        <option value="2" data-t="kersStrong"></option>
+        <option value="0" data-t="kersOff">Aus</option>
+        <option value="1" data-t="kersMed">Mittel</option>
+        <option value="2" data-t="kersStrong">Stark</option>
       </select>
-      <button id="btn-set-kers" data-t="btnSet" disabled></button>
+      <button id="btn-set-kers" data-t="btnSet" disabled>Setzen</button>
     </div>
     <div class="set-row">
-      <label data-t="lblCruise"></label>
+      <label data-t="lblCruise">Tempomat</label>
       <select id="cruise-in" disabled>
-        <option value="0" data-t="cruiseOff"></option>
-        <option value="1" data-t="cruiseOn"></option>
+        <option value="0" data-t="cruiseOff">Aus</option>
+        <option value="1" data-t="cruiseOn">An</option>
       </select>
-      <button id="btn-set-cruise" data-t="btnSet" disabled></button>
+      <button id="btn-set-cruise" data-t="btnSet" disabled>Setzen</button>
     </div>
     <div class="set-row">
-      <label data-t="lblTailLight"></label>
+      <label data-t="lblTailLight">Rücklicht</label>
       <select id="taillight-in" disabled>
-        <option value="0" data-t="offLabel"></option>
-        <option value="1" data-t="onLabel"></option>
+        <option value="0" data-t="offLabel">Aus</option>
+        <option value="1" data-t="onLabel">An</option>
       </select>
-      <button id="btn-set-taillight" data-t="btnSet" disabled></button>
+      <button id="btn-set-taillight" data-t="btnSet" disabled>Setzen</button>
     </div>
     <div class="set-row">
-      <label data-t="lblVolume"></label>
+      <label data-t="lblVolume">Lautstärke</label>
       <input id="volume-in" type="number" step="1" min="0" max="100" disabled>
-      <button id="btn-set-volume" data-t="btnSet" disabled></button>
+      <button id="btn-set-volume" data-t="btnSet" disabled>Setzen</button>
     </div>
-    <p class="hint" data-t="settingsHint"></p>
+    <p class="hint" data-t="settingsHint">Werte werden direkt auf den Scooter geschrieben. Nur die E-Serie-Geschwindigkeit (0x93) ist byte-geprüft; Modus/KERS/Cruise/Rücklicht/Lautstärke und die Speed-Register anderer Modelle sind unbestätigt - erst lesen, dann schreiben.</p>
   </div>
 
   <div class="card" id="live-card" hidden>
-    <h2 data-t="s4Title"></h2>
+    <h2 data-t="s4Title">Telemetrie</h2>
     <div class="grid">
-      <div class="tile"><b id="t-speed">-</b><small data-t="tileSpeed"></small></div>
-      <div class="tile"><b id="t-battery">-</b><small data-t="tileBattery"></small></div>
-      <div class="tile"><b id="t-speedlimit">-</b><small data-t="tileSpeedLimit"></small></div>
-      <div class="tile"><b id="t-mode">-</b><small data-t="tileMode"></small></div>
-      <div class="tile"><b id="t-odo">-</b><small data-t="tileOdo"></small></div>
-      <div class="tile"><b id="t-trip">-</b><small data-t="tileTrip"></small></div>
-      <div class="tile"><b id="t-range">-</b><small data-t="tileRange"></small></div>
-      <div class="tile"><b id="t-serial">-</b><small data-t="tileSerial"></small></div>
+      <div class="tile"><b id="t-speed">-</b><small data-t="tileSpeed">Geschwindigkeit</small></div>
+      <div class="tile"><b id="t-battery">-</b><small data-t="tileBattery">Akku</small></div>
+      <div class="tile"><b id="t-speedlimit">-</b><small data-t="tileSpeedLimit">Speed-Limit</small></div>
+      <div class="tile"><b id="t-mode">-</b><small data-t="tileMode">Modus</small></div>
+      <div class="tile"><b id="t-odo">-</b><small data-t="tileOdo">Gesamt-km</small></div>
+      <div class="tile"><b id="t-trip">-</b><small data-t="tileTrip">Trip-km</small></div>
+      <div class="tile"><b id="t-range">-</b><small data-t="tileRange">Reichweite</small></div>
+      <div class="tile"><b id="t-serial">-</b><small data-t="tileSerial">Seriennummer</small></div>
     </div>
-    <div class="row"><span class="fin"><span data-t="rowFwVer"></span> <span id="t-fwver">-</span></span></div>
-    <div class="row"><span class="fin"><span data-t="rowBleName"></span> <span id="t-blename">-</span></span></div>
+    <div class="row"><span class="fin"><span data-t="rowFwVer">Firmware:</span> <span id="t-fwver">-</span></span></div>
+    <div class="row"><span class="fin"><span data-t="rowBleName">BLE-Name:</span> <span id="t-blename">-</span></span></div>
   </div>
 
   <div class="card" id="bms-card" hidden>
-    <h2 data-t="bmsTitle"></h2>
+    <h2 data-t="bmsTitle">Batterie (BMS)</h2>
     <div class="grid">
-      <div class="tile"><b id="b-soc">-</b><small data-t="bmsSoc"></small></div>
-      <div class="tile"><b id="b-voltage">-</b><small data-t="bmsVoltage"></small></div>
-      <div class="tile"><b id="b-current">-</b><small data-t="bmsCurrent"></small></div>
-      <div class="tile"><b id="b-temp">-</b><small data-t="bmsTemp"></small></div>
-      <div class="tile"><b id="b-cycles">-</b><small data-t="bmsCycles"></small></div>
+      <div class="tile"><b id="b-soc">-</b><small data-t="bmsSoc">Ladestand</small></div>
+      <div class="tile"><b id="b-voltage">-</b><small data-t="bmsVoltage">Pack-Spannung</small></div>
+      <div class="tile"><b id="b-current">-</b><small data-t="bmsCurrent">Strom</small></div>
+      <div class="tile"><b id="b-temp">-</b><small data-t="bmsTemp">Temperatur</small></div>
+      <div class="tile"><b id="b-cycles">-</b><small data-t="bmsCycles">Ladezyklen</small></div>
     </div>
-    <div class="row"><span class="fin" data-t="bmsCells"></span></div>
+    <div class="row"><span class="fin" data-t="bmsCells">Zellspannungen</span></div>
     <div class="cells" id="b-cells"></div>
     <p class="hint" id="b-note"></p>
   </div>
 
   <div class="card" id="sn-card" hidden>
-    <h2 data-t="snTitle"></h2>
+    <h2 data-t="snTitle">Seriennummer & Region</h2>
     <p class="hint warn-note" id="sn-note"></p>
-    <p class="hint warn-note" data-t="snWarn"></p>
-    <div class="row"><span class="fin"><span data-t="snCurrent"></span> <span id="sn-current" class="mono">-</span></span></div>
-    <div class="row"><span class="fin"><span data-t="snRegion"></span> <span id="sn-region">-</span></span></div>
+    <p class="hint warn-note" data-t="snWarn">SN ändern = Region ändern. Kein freies Register: schreibt die Seriennummer neu (cmd 0x18) - das klappt nur auf älteren BLE-Modellen (ESx, Max/G30); neuere (z.B. Max G3) gehen NUR per ST-Link-Flash, nicht über BLE. Die „Aktivierung/Kopplung" danach läuft über die Segway-App + Cloud-Konto (entkoppeln → SN ändern → neu koppeln) - das kann dieses BLE-Tool NICHT ersetzen. Neuere Firmware kann die Region fest sperren. NUR mit vorheriger Sicherung ausführen!</p>
+    <div class="row"><span class="fin"><span data-t="snCurrent">Aktuelle SN:</span> <span id="sn-current" class="mono">-</span></span></div>
+    <div class="row"><span class="fin"><span data-t="snRegion">Region (4. Zeichen):</span> <span id="sn-region">-</span></span></div>
     <div class="btns">
-      <button id="sn-backup" class="span2" data-t="snBackup" disabled></button>
+      <button id="sn-backup" class="span2" data-t="snBackup" disabled>📥 SN + Daten sichern (Download + lokal)</button>
     </div>
     <p class="hint" id="sn-backup-info"></p>
     <hr class="sep">
-    <label class="check-row"><input type="checkbox" id="sn-ack"> <span data-t="snAck"></span></label>
+    <label class="check-row"><input type="checkbox" id="sn-ack"> <span data-t="snAck">Ich habe gesichert und verstehe das Risiko: Neu-Aktivierung kann nötig werden und ist nicht garantiert umkehrbar.</span></label>
     <div class="set-row">
-      <label data-t="snNew"></label>
+      <label data-t="snNew">Neue SN</label>
       <input id="sn-new" type="text" maxlength="16" placeholder="N4GSW..." disabled>
-      <button id="sn-write" class="danger" data-t="snWrite" disabled></button>
+      <button id="sn-write" class="danger" data-t="snWrite" disabled>SN schreiben</button>
     </div>
     <div class="btns">
-      <button id="sn-restore" class="span2" data-t="snRestore" disabled></button>
+      <button id="sn-restore" class="span2" data-t="snRestore" disabled>↩ Aus letzter Sicherung wiederherstellen</button>
     </div>
-    <p class="hint" data-t="snHint"></p>
+    <p class="hint" data-t="snHint">SN muss exakt die Länge des Originals haben (meist 14 Zeichen). Das Präfix (u.a. 4. Zeichen) kodiert die Region. Sichere IMMER zuerst - die Wiederherstellung schreibt die gesicherte SN per cmd 0x18 zurück. Hinweis: Re-Kopplung/Aktivierung erfolgt in der Segway-App, nicht in diesem Tool.</p>
   </div>
 
   <div class="card" id="raw-card" hidden>
-    <div class="card-head"><h2 data-t="rawTitle"></h2><button type="button" class="help-btn" data-help="raw" aria-label="Info">?</button></div>
-    <p class="hint warn-note" data-t="rawWarn"></p>
+    <div class="card-head"><h2 data-t="rawTitle">Experten-Konsole (Roh-Register)</h2><button type="button" class="help-btn" data-help="raw" aria-label="Info">?</button></div>
+    <p class="hint warn-note" data-t="rawWarn">Schreibt beliebige Werte direkt auf den Roller - nur zum Experimentieren am EIGENEN Gerät. Falsche Werte können Einstellungen verstellen. Echte Topspeed-Freischaltung über Motorstrom/Feldschwächung geht hier NICHT (das ist Custom-Firmware).</p>
     <div class="raw-grid">
-      <div class="rf full"><label data-t="rawPreset"></label>
+      <div class="rf full"><label data-t="rawPreset">Vorlage (Speed-Hebel & Lese-Register)</label>
         <select id="raw-preset"></select></div>
-      <div class="rf full"><label data-t="rawBoard"></label>
+      <div class="rf full"><label data-t="rawBoard">Board</label>
         <select id="raw-board"></select></div>
-      <div class="rf"><label data-t="rawReg"></label>
+      <div class="rf"><label data-t="rawReg">Register (hex)</label>
         <input id="raw-reg" type="text" placeholder="0x72"></div>
-      <div class="rf"><label data-t="rawLen"></label>
+      <div class="rf"><label data-t="rawLen">Länge (Bytes)</label>
         <input id="raw-len" type="number" min="1" max="60" value="2"></div>
-      <div class="rf full"><label data-t="rawValue"></label>
+      <div class="rf full"><label data-t="rawValue">Wert (Hex-Bytes, little-endian)</label>
         <input id="raw-val" type="text" placeholder="2c 01"></div>
     </div>
     <div class="btns">
-      <button id="raw-read" data-t="rawRead" disabled></button>
-      <button id="raw-write" data-t="rawWrite" disabled></button>
+      <button id="raw-read" data-t="rawRead" disabled>Lesen</button>
+      <button id="raw-write" data-t="rawWrite" disabled>Schreiben</button>
     </div>
     <div class="raw-out" id="raw-out"></div>
-    <p class="hint" data-t="rawHint"></p>
+    <p class="hint" data-t="rawHint">Register/Wert als Hex (z. B. 72 oder 0x72; Wert z. B. „2c 01"). Die Antwort erscheint oben in mehreren Deutungen (u8/u16le/u16be/u32le/ascii) - der plausibelste Wert zählt. So lässt sich jeder Hebel einzeln durchtesten.</p>
   </div>
 
   <div class="card">
-    <h2 data-t="s6Title"></h2>
+    <h2 data-t="s6Title">Protokoll-Log</h2>
     <div class="log-opts">
       <div class="log-opt">
-        <span data-t="publicLogLabel"></span>
+        <span data-t="publicLogLabel">Öffentliches Log (Gerätename/ID anonymisieren)</span>
         <input type="checkbox" id="public-log" checked>
         <button type="button" class="help-btn" data-help="publiclog" aria-label="Info">?</button>
       </div>
       <div class="log-opt">
-        <span data-t="diagLogLabel"></span>
+        <span data-t="diagLogLabel">Diagnose-Log</span>
         <input type="checkbox" id="diag-log">
         <button type="button" class="help-btn" data-help="diaglog" aria-label="Info">?</button>
       </div>
     </div>
     <div class="btns">
-      <button type="button" id="btn-copy-log" data-t="btnCopyLog"></button>
-      <button type="button" id="btn-clear-log" data-t="btnClearLog"></button>
-      <button type="button" id="btn-save-log" class="span2" data-t="btnSaveLog"></button>
+      <button type="button" id="btn-copy-log" data-t="btnCopyLog">Kopieren</button>
+      <button type="button" id="btn-clear-log" data-t="btnClearLog">Leeren</button>
+      <button type="button" id="btn-save-log" class="span2" data-t="btnSaveLog">Log als .txt sichern</button>
     </div>
     <pre id="log"></pre>
-    <p class="hint"><span class="log-tx" data-t="logTxLegend"></span>, <span class="log-rx" data-t="logRxLegend"></span></p>
+    <p class="hint"><span class="log-tx" data-t="logTxLegend">gesendet</span>, <span class="log-rx" data-t="logRxLegend">empfangen</span></p>
   </div>
 
   <footer class="foot">
     <span class="foot-links">
-      <a id="link-guide" href="GUIDE.de.md" data-doc="GUIDE" data-t="footGuide"></a>
-      <a href="https://github.com/Laufbursche42/sw-unlock" target="_blank" rel="noopener" data-t="footSource"></a>
-      <a id="link-readme" href="README.md" data-doc="README" data-t="footReadme"></a>
-      <a id="link-disclaimer" href="DISCLAIMER.de.md" data-doc="DISCLAIMER" data-t="footDisclaimer"></a>
-      <a id="link-license" href="LICENSE.de.md" data-doc="LICENSE" data-t="footLicense"></a>
-      <a id="link-privacy" href="PRIVACY.de.md" data-doc="PRIVACY" data-t="footPrivacy"></a>
-      <a id="link-trademarks" href="TRADEMARKS.de.md" data-doc="TRADEMARKS" data-t="footTrademarks"></a>
+      <a id="link-guide" href="GUIDE.de.md" data-doc="GUIDE" data-t="footGuide">Anleitung</a>
+      <a href="https://github.com/Laufbursche42/sw-unlock" target="_blank" rel="noopener" data-t="footSource">Quellcode</a>
+      <a id="link-readme" href="README.md" data-doc="README" data-t="footReadme">Readme</a>
+      <a id="link-disclaimer" href="DISCLAIMER.de.md" data-doc="DISCLAIMER" data-t="footDisclaimer">Haftungsausschluss</a>
+      <a id="link-license" href="LICENSE.de.md" data-doc="LICENSE" data-t="footLicense">Lizenz</a>
+      <a id="link-privacy" href="PRIVACY.de.md" data-doc="PRIVACY" data-t="footPrivacy">Datenschutz</a>
+      <a id="link-trademarks" href="TRADEMARKS.de.md" data-doc="TRADEMARKS" data-t="footTrademarks">Marken</a>
     </span>
-    <span class="foot-links"><span class="ver" id="build-ver"></span><a href="https://github.com/Laufbursche42/Laufbursche42/issues" target="_blank" rel="noopener" data-t="footIssue"></a></span>
+    <span class="foot-links"><span class="ver" id="build-ver"></span><a href="https://github.com/Laufbursche42/Laufbursche42/issues" target="_blank" rel="noopener" data-t="footIssue">Fehler melden</a></span>
     <a class="foot-copy" href="https://laufbursche42.github.io/sw-unlock/" target="_blank" rel="noopener">Copyright (c) 2026 Laufbursche</a>
   </footer>
 </div>
@@ -241,7 +241,7 @@
   </div>
   <div class="doc-body" id="doc-body"></div>
   <div class="doc-foot">
-    <button type="button" id="doc-close" data-t="docClose"></button>
+    <button type="button" id="doc-close" data-t="docClose">Schließen</button>
   </div>
 </dialog>
 
@@ -252,24 +252,24 @@
   </div>
   <div class="doc-body"><div id="help-body"></div><p id="help-warn" class="help-warn" hidden></p></div>
   <div class="doc-foot">
-    <button type="button" id="help-close" data-t="docClose"></button>
+    <button type="button" id="help-close" data-t="docClose">Schließen</button>
   </div>
 </dialog>
 
 <dialog id="confirm" aria-labelledby="confirm-title">
   <div class="doc-head">
-    <h3 id="confirm-title" data-t="riskyTitle"></h3>
+    <h3 id="confirm-title" data-t="riskyTitle">Bist du sicher?</h3>
     <button type="button" id="confirm-cancel-x">&times;</button>
   </div>
   <div class="doc-body"><p id="confirm-body"></p></div>
   <div class="doc-foot doc-foot-2">
-    <button type="button" id="confirm-cancel" data-t="riskyCancel"></button>
-    <button type="button" id="confirm-ok" class="primary" data-t="riskyOk"></button>
+    <button type="button" id="confirm-cancel" data-t="riskyCancel">Abbrechen</button>
+    <button type="button" id="confirm-ok" class="primary" data-t="riskyOk">Ja, schreiben</button>
   </div>
 </dialog>
 
-<script src="report-footer.js?v=10"></script>
-<script src="i18n.js?v=10"></script>
-<script src="app.js?v=10"></script>
+<script src="report-footer.js?v=11"></script>
+<script src="i18n.js?v=11"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>

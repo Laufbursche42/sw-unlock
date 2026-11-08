@@ -15,7 +15,7 @@
 // and unverified on a real vehicle. The model picker selects the right board+register; verify values by reading first.
 'use strict';
 
-const BUILD = 'v10';
+const BUILD = 'v11';
 
 // ---- BLE service UUIDs ----
 const NINEBOT_SVC='6e400001-0000-0000-006e-696e65626f74', NINEBOT_WR='6e400002-0000-0000-006e-696e65626f74', NINEBOT_NTFY='6e400004-0000-0000-006e-696e65626f74';
